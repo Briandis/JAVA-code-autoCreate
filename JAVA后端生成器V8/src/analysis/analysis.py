@@ -196,13 +196,12 @@ class SQLLinkUtil:
         print("链接成功！")
 
     def get_all_table(self):
-        sql = "show tables;"
+        sql = "show full tables where Table_Type = 'BASE TABLE';"
         tables = self.mysql.execute_select(sql, DataBase)
         print(f"查询到表数量：{len(tables)}")
         temp = []
         for i in tables:
-            for j in i.__dict__:
-                temp.append(i.__dict__[j])
+            temp.append(i.Tables_in_test)
         tables = temp
         for i in tables:
             sql = f"desc {i}"
