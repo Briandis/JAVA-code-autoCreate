@@ -1,0 +1,27 @@
+{
+  "database": "test",
+  "project": "com.test",
+  "underscoreReplace": "true",
+  "pageModel": "superModel",
+  "attrPrefix": "true",
+  "tablePrefix": "",
+  "restful": "true",
+  "fuzzySearch": "true",
+  "fuzzySearchList": [
+    "game",
+    "label",
+    {
+      "game_role": [
+        "game_role_name",
+        "game_role_info"
+      ]
+    },
+    "topic_comment",
+    "user",
+    "question_container"
+  ],
+  "resMap": "true",
+  "multiTable": "true",
+  "multiName": "true",
+  "falseDelete": "true"
+}
