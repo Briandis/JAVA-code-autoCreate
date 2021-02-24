@@ -201,7 +201,7 @@ class SQLLinkUtil:
         print(f"查询到表数量：{len(tables)}")
         temp = []
         for i in tables:
-            temp.append(i.Tables_in_test)
+            temp.append(getattr(i, f'Tables_in_{self.database}'))
         tables = temp
         for i in tables:
             sql = f"desc {i}"
