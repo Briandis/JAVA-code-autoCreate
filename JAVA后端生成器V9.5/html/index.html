@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh" style="height: 100%;">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>基础信息填写</title>
+    <link rel="stylesheet" href="/static/bootstrap.v3.3.7/css/bootstrap.min.css">
+    <script src="/static/jquery/jquery.v3.5.1.js"></script>
+    <script src="/static/bootstrap.v3.3.7/js/bootstrap.min.js"></script>
+    <script src="/static/vue/vue.2.6.12.js"></script>
+
+</head>
+
+<body style="height: 100%;">
+
+    <div class="container">
+        <div class="row">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="jumbotron text-center">
+                        <h1>
+                            JAVA后端代码生成器
+                        </h1>
+                        <p class="text-danger">
+                            配置中心
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-horizontal" role="form" id="loginModel">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">数据库地址</label>
+                        <div class="col-sm-6">
+                            <input class="form-control" type="text" v-model="host" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">用户名</label>
+                        <div class="col-sm-6">
+                            <input class="form-control" type="text" v-model="name" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">密码</label>
+                        <div class="col-sm-6">
+                            <input class="form-control" type="text" v-model="password" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">数据库名*</label>
+                        <div class="col-sm-6">
+                            <input class="form-control" type="text" v-model="database" placeholder="必填项" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">端口</label>
+                        <div class="col-sm-6">
+                            <input class="form-control" type="number" v-model="port" @input="inputPort" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">操作</label>
+                        <div class="col-sm-6">
+                            <button class="btn btn-sm btn-success" @click="login">连接数据库</button>
+                            <span class="help-block">{{msg}}</span>
+                        </div>
+                    </div>
+                    <div v-if="isShow">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-6">
+                                <p class="position-static">连接成功配置，填写配置项</p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">工程名称</label>
+                            <div class="col-sm-6">
+                                <input class="form-control" v-model="project" />
+                                <span class="help-block">com.xxx</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">移除统一表前缀</label>
+                            <div class="col-sm-6">
+                                <input class="form-control" v-model="tablePrefix" />
+                                <span class="help-block">
+                                    可选项，去除表的统一前缀前缀，进行生成实体类例如，test_A,test_B，
+                                    填入test后，将去掉，保留_A,_B作为实体类名，
+                                    所以替换不要忘记加入下划线，未加入会对生成类名收到一定影响。
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">默认工具库名</label>
+                            <div class="col-sm-6">
+                                <input class="form-control" v-model="util" />
+                                <span class="help-block">
+                                    可选项，不填工具库默认名称util，如果填入，则会自动去除首尾的【.】，并和默认工程名称拼接
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">下划线替换成驼峰</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="underscoreReplace" name="underscoreReplace" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="underscoreReplace" name="underscoreReplace"
+                                        value="true" />是
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">restful风格接口</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="restful" name="restful" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="restful" name="restful" value="true" />是
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">resMap替换</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="resMap" name="resMap" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="resMap" name="resMap" value="true" />是
+                                </label>
+                                <span class="help-block">选择后xml中将用select标签将用resMap替换resType</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">移除实体表字段前缀</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="attrPrefix" name="attrPrefix" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="attrPrefix" name="attrPrefix" value="true" />是
+                                </label>
+                                <span class="help-block">
+                                    例如表product，字段名product_id,product_user_id，将会自动去除,product_，只以id,userId作为属性生成实体类
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">扫描多表映射关系</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="multiTable" name="multiTable" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="multiTable" name="multiTable" value="true" />是
+                                </label>
+                                <span class="help-block">
+                                    自动扫描表关系，是基于B表持有A表的表名+主键名，如B中有字段：XXX_product_key，表product主键为key，则会自动构成映射关系。
+                                    多表扫描关闭，强制声明的依然生效
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">彻底解决表字段重名</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="multiName" name="multiName" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="multiName" name="multiName" value="true" />是
+                                </label>
+                                <span class="help-block">
+                                    表与表之间字段重复，则xml中就需要对应映射处理，默认有替换策略，但无法全部解决，此项可以完全解决
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">SQL注入项</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="SQLInjection" name="SQLInjection" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="SQLInjection" name="SQLInjection" value="true" />是
+                                </label>
+                                <span class="help-block">
+                                    为每个查询后面加入sql注入参数，在xml中以${}作为占位符，解决排序，分组等复杂处理，或者更复杂的查询条件
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">生成假删</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="falseDelete" name="falseDelete" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="falseDelete" name="falseDelete" value="true" />是
+                                </label>
+                                <span class="help-block">生成一个updateFasle</span>
+                            </div>
+                        </div>
+                        <div class="form-group" v-if="falseDelete=='true'">
+                            <label class="col-sm-3 control-label">假删标记后缀</label>
+                            <div class="col-sm-6">
+                                <input class="form-control" v-model="falseDeleteFlag" />
+                                <span class="help-block">可不填，默认扫描delete_flag的后缀作为假删，会根据下划线转换变化</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">生成模式</label>
+                            <div class="col-sm-9">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="pageModel" name="pageModel" />传统MVC
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="pageModel" name="pageModel" value="model" />表包化
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="pageModel" name="pageModel" value="superModel" />多层表包化
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="pageModel" name="pageModel" value="XMLModel" />xml独立模式
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="pageModel" name="pageModel"
+                                        value="superXMLModel" />多层表包化xml独立模式
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">生成的文件</label>
+                            <div class="col-sm-9">
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="createFile" value="controller"> controller
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="createFile" value="service"> service
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="createFile" value="serviceImpl"> serviceImpl
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="createFile" value="JAVAMapper"> JAVAMapper
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="createFile" value="XMLMapper"> XMLMapper
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="createFile" value="POJO"> POJO
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="createFile" value="POJOAuto"> POJOAuto
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="createFile" value="JAVAAutoMapper"> JAVAAutoMapper
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="createFile" value="XMLAutoMapper"> XMLAutoMapper
+                                </label>
+                                <span class="help-block">
+                                    不选择全部生成
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">不生成的文件</label>
+                            <div class="col-sm-9">
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="notCreateFile" value="controller"> controller
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="notCreateFile" value="service"> service
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="notCreateFile" value="serviceImpl"> serviceImpl
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="notCreateFile" value="JAVAMapper"> JAVAMapper
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="notCreateFile" value="XMLMapper"> XMLMapper
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="notCreateFile" value="POJO"> POJO
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="notCreateFile" value="POJOAuto"> POJOAuto
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="notCreateFile" value="JAVAAutoMapper">
+                                    JAVAAutoMapper
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" v-model="notCreateFile" value="XMLAutoMapper"> XMLAutoMapper
+                                </label>
+                                <span class="help-block">
+                                    选择后，将不生成
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">不生成的前台访问接口的表</label>
+                            <div class="col-sm-9">
+                                <label class="checkbox-inline" v-for="obj in listData">
+                                    <input type="checkbox" v-model="noUserAPI" :value="obj.tableName">{{obj.tableName}}
+                                </label>
+                                <span class="help-block">选择后，将不在控制层、业务层生成前台接口</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">不生成用户后台访问接口的表</label>
+                            <div class="col-sm-9">
+                                <label class="checkbox-inline" v-for="obj in listData">
+                                    <input type="checkbox" v-model="noAdminAIP" :value="obj.tableName">{{obj.tableName}}
+                                </label>
+                                <span class="help-block">选择后，将不在控制层、业务层生成后台接口</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">模糊搜索</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="fuzzySearch" name="fuzzySearch" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="fuzzySearch" name="fuzzySearch" value="true" />是
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group" v-if="fuzzySearch=='true'">
+                            <label class="col-sm-3 control-label">模糊查询字段筛选</label>
+                            <div class="col-sm-9">
+                                <div class="form-group" v-for="obj in fuzzySearchList">
+                                    <label class="col-sm-2 control-label">表：{{obj.tableName}}</label>
+                                    <div class="col-sm-9">
+                                        <label class="checkbox-inline" v-for="attr in obj.attr">
+                                            <input type="checkbox" v-model="fuzzySearchListString"
+                                                :value="obj.tableName+'.'+attr">{{attr}}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">强制指定一对一关系</label>
+                            <div class="col-sm-2">
+                                <div class="form-group" v-for="obj in listData">
+                                    <div class="col-sm-9 col-sm-offset-0">
+                                        <label class="radio-inline">
+                                            <input type="radio" name="oneToOneRadioLeft" v-model="oneToOneLeftString"
+                                                :value="obj.tableName+'.'+obj.key.filed">{{obj.tableName+'.'+obj.key.filed}}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-7">
+                                <div class="form-group" v-for="obj in listData">
+                                    <label class="col-sm-3 control-label">表：{{obj.tableName}}</label>
+                                    <div class="col-sm-9">
+                                        <label class="radio-inline" v-for="attr in obj.attr">
+                                            <input type="radio" name="oneToOneRadioRight" v-model="oneToOneRightString"
+                                                :value="obj.tableName+'.'+attr.filed">{{attr.filed}}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-sm-offset-3">
+                                <button class="btn btn-primary btn-sm" @click="addOneToOneMap">添加关系</button>
+                                <span class="help-block">
+                                    左表是表主键，右边是每个表字段，两边均只能选一个，给不是遵守B.A_key=A.key的起名方式使用
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">强制指定的一对一关系列表</label>
+                            <div class="col-sm-9">
+                                <div class="form-group" v-for="obj of oneToOne">
+                                    <label class="col-sm-5 control-label" style="text-align: left;">{{obj}}</label>
+                                    <div class="col-sm-4">
+                                        <a class="btn btn-sm btn-warning" @click="popOneToOneMap(obj)">移除</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">强制指定一对多关系</label>
+                            <div class="col-sm-2">
+                                <div class="form-group" v-for="obj in listData">
+                                    <div class="col-sm-9 col-sm-offset-0">
+                                        <label class="radio-inline">
+                                            <input type="radio" name="oneToManyRadioLeft" v-model="oneToManyLeftString"
+                                                :value="obj.tableName+'.'+obj.key.filed">{{obj.tableName+'.'+obj.key.filed}}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-7">
+                                <div class="form-group" v-for="obj in listData">
+                                    <label class="col-sm-3 control-label">表：{{obj.tableName}}</label>
+                                    <div class="col-sm-9">
+                                        <label class="radio-inline" v-for="attr in obj.attr">
+                                            <input type="radio" name="oneToManyRadioRight"
+                                                v-model="oneToManyRightString"
+                                                :value="obj.tableName+'.'+attr.filed">{{attr.filed}}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-sm-offset-3">
+                                <button class="btn btn-primary btn-sm" @click="addOneToManyMap">添加关系</button>
+                                <span class="help-block">
+                                    左表是表主键，右边是每个表字段，两边均只能选一个，给不是遵守B.A_key=A.key的起名方式使用
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">强制指定的一对多关系列表</label>
+                            <div class="col-sm-9">
+                                <div class="form-group" v-for="obj of oneToMany">
+                                    <label class="col-sm-5 control-label" style="text-align: left;">{{obj}}</label>
+                                    <div class="col-sm-4">
+                                        <a class="btn btn-sm btn-warning" @click="popOneToManyMap(obj)">移除</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">选择生成的表</label>
+                            <div class="col-sm-9">
+                                <label class="checkbox-inline" v-for="obj in listData">
+                                    <input type="checkbox" v-model="table" :value="obj.tableName">{{obj.tableName}}
+                                </label>
+                                <span class="help-block">
+                                    不选择对所有表全部生成，选择后只生成该表的文件，但是装配关系依然生效
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">操作</label>
+                            <div class="col-sm-9">
+                                <button class="btn btn-sm btn-success" @click="submit"
+                                    :disabled="submitFlag">生成配置文件</button>
+                                <span class="help-block">{{msg1}}</span>
+                                <a href="config.html" v-if="nextFlag">点击进入下一页</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="height: 200px;"></div>
+</body>
+<script>
+    var loginModel = new Vue({
+        el: "#loginModel",
+        data: {
+            host: "127.0.0.1",
+            name: "root",
+            password: "123456",
+            database: null,
+            port: 3306,
+            project: "com.test",
+            underscoreReplace: "true",
+            restful: "true",
+            fuzzySearch: "true",
+            fuzzySearchList: [],
+            fuzzySearchListString: [],
+            resMap: "true",
+            pageModel: "superModel",
+            tablePrefix: null,
+            attrPrefix: "true",
+            util: null,
+            multiTable: "true",
+            multiName: "true",
+            oneToOne: new Set(),
+            oneToMany: new Set(),
+            createFile: ["POJOAuto", "JAVAAutoMapper", "XMLAutoMapper"],
+            notCreateFile: [],
+            falseDelete: "true",
+            falseDeleteFlag: null,
+            noUserAPI: [],
+            noAdminAIP: [],
+            SQLInjection: "true",
+            msg: null,
+            isShow: false,
+            listData: null,
+            oneToOneLeftString: null,
+            oneToOneRightString: null,
+            oneToManyLeftString: null,
+            oneToManyRightString: null,
+            table: [],
+            msg1: null,
+            nextFlag: false,
+            submitFlag: false,
+        },
+        methods: {
+            inputPort() {
+                this.port = parseInt(new Number(this.port));
+                this.port = this.port < 0 ? 3306 : this.port > 65535 ? 3306 : this.port;
+            },
+            login() {
+                var self = this;
+                var url = "/javaCode/login";
+                var data = {
+                    "name": self.name,
+                    "password": self.password,
+                    "host": self.host,
+                    "port": self.port,
+                };
+                if (self.database == null || self.database.length == 0) {
+                    self.msg = "数据库名！！！！";
+                    return;
+                }
+                data.database = self.database
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.listData = res.data;
+                        for (obj of self.listData) {
+                            let count = false;
+                            let list = []
+                            for (attr of obj.attr) {
+                                if (attr.type == "String") {
+                                    count = true;
+                                    self.fuzzySearchListString.push(obj.tableName + "." + attr.filed)
+                                    list.push(attr.filed);
+                                }
+                            }
+                            if (count) {
+                                self.fuzzySearchList.push({
+                                    "tableName": obj.tableName,
+                                    "attr": list
+                                });
+                            }
+                        }
+                        self.isShow = true;
+                    } else {
+                        self.msg = "数据库链接失败，检查表名和密码";
+                    }
+
+                }).fail(function (res) {
+                    self.msg = "请求失败，错误代码：" + res.status;
+                })
+            },
+            fuzzySearchListSplit() {
+                let fuzzySearchList = {};
+                for (obj of this.fuzzySearchListString) {
+                    let l = obj.split(".")
+                    if (fuzzySearchList[l[0]] == null) {
+                        fuzzySearchList[l[0]] = []
+                    }
+                    fuzzySearchList[l[0]].push(l[1]);
+                }
+                return fuzzySearchList
+            },
+            addOneToOneMap() {
+                if (this.oneToOneLeftString != null && this.oneToOneRightString != null) {
+                    this.oneToOne.add(this.oneToOneLeftString + "->" + this.oneToOneRightString);
+                    this.$forceUpdate()
+                }
+            },
+            popOneToOneMap(value) {
+                this.oneToOne.delete(value);
+                this.$forceUpdate()
+            },
+            addOneToManyMap() {
+                if (this.oneToManyLeftString != null && this.oneToManyRightString != null) {
+                    this.oneToMany.add(this.oneToManyLeftString + "->" + this.oneToManyRightString);
+                    this.$forceUpdate()
+                }
+            },
+            popOneToManyMap(value) {
+                this.oneToMany.delete(value);
+                this.$forceUpdate()
+            },
+            submit() {
+                var self = this;
+                self.submitFlag = true;
+                setTimeout(() => {
+                    self.submitFlag = false;
+                }, 2000)
+                var url = "/javaCode/createConfig";
+                var data = {
+                    "name": self.name,
+                    "password": self.password,
+                    "host": self.host,
+                    "port": self.port,
+                    "project": self.project,
+                    "database": self.database,
+                };
+                if (self.underscoreReplace != null) {
+                    data.underscoreReplace = self.underscoreReplace;
+                }
+                if (self.restful != null) {
+                    data.restful = self.restful;
+                }
+                if (self.fuzzySearch != null) {
+                    data.fuzzySearch = self.fuzzySearch;
+                    if (self.fuzzySearchListString != null && self.fuzzySearchListString.length > 0) {
+                        data.fuzzySearchList = self.fuzzySearchListSplit();
+                    }
+                }
+                if (self.resMap != null) {
+                    data.resMap = self.resMap;
+                }
+                if (self.pageModel != null) {
+                    data.pageModel = self.pageModel;
+                }
+                if (self.tablePrefix != null) {
+                    data.tablePrefix = self.tablePrefix;
+                }
+                if (self.attrPrefix != null) {
+                    data.attrPrefix = self.attrPrefix;
+                }
+                if (self.util != null) {
+                    data.util = self.util;
+                }
+                if (self.multiTable != null) {
+                    data.multiTable = self.multiTable;
+                }
+                if (self.multiName != null) {
+                    data.multiName = self.multiName;
+                }
+                if (self.oneToOne != null && self.oneToOne.size > 0) {
+                    data.oneToOne = Array.from(self.oneToOne);
+                }
+                if (self.oneToMany != null && self.oneToMany.size > 0) {
+                    data.oneToMany = Array.from(self.oneToMany);
+                }
+                if (self.createFile != null && self.createFile.length > 0) {
+                    data.createFile = self.createFile;
+                }
+                if (self.notCreateFile != null && self.notCreateFile.length > 0) {
+                    data.notCreateFile = self.notCreateFile;
+                }
+                if (self.falseDelete != null) {
+                    data.falseDelete = self.falseDelete;
+                }
+                if (self.falseDeleteFlag != null) {
+                    data.falseDeleteFlag = self.falseDeleteFlag;
+                }
+                if (self.noUserAPI != null && self.noUserAPI.length > 0) {
+                    data.noUserAPI = self.noUserAPI;
+                }
+                if (self.noAdminAIP != null && self.noAdminAIP.length > 0) {
+                    data.noAdminAIP = self.noAdminAIP;
+                }
+                if (self.SQLInjection != null) {
+                    data.SQLInjection = self.SQLInjection;
+                }
+                if (self.table != null && self.table.length > 0) {
+                    data.table = self.table;
+                }
+                $.post(url, { "data": JSON.stringify(data) }, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.msg1 = "基础config.json生成完成";
+                        self.nextFlag = true;
+                    } else {
+                        self.msg1 = "服务器执行业务失败";
+                    }
+                }).fail(function (res) {
+                    self.msg1 = "请求失败，错误代码：" + res.status;
+                })
+
+
+            }
+        }
+    })
+
+</script>
+
+</html>
