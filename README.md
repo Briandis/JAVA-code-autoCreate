@@ -8,6 +8,8 @@ JAVA WEB后端代码生成器
 
 下载ZIP即可获得windows编译好的exe
 
+支持 SSM代码生成、springBoot代码生成，前提是前后端分离项目。
+
 快速入门说明
 
     1、下载zip后解压压缩包
