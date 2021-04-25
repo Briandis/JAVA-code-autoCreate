@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh" style="height: 100%;">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>克隆模式</title>
+    <link rel="stylesheet" href="/static/bootstrap.v3.3.7/css/bootstrap.min.css">
+    <script src="/static/jquery/jquery.v3.5.1.js"></script>
+    <script src="/static/bootstrap.v3.3.7/js/bootstrap.min.js"></script>
+    <script src="/static/vue/vue.2.6.12.js"></script>
+
+</head>
+
+<body style="height: 100%;">
+
+    <div class="container">
+        <div class="row">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="jumbotron text-center">
+                        <h1>
+                            JAVA后端代码生成器
+                        </h1>
+                        <p class="text-danger">
+                            克隆生成中心
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12" id="configModel">
+                <div class="well">
+                    <p>
+                        config.json<span v-if="a">存在</span><span v-else class="text-danger">不存在</span>
+                    </p>
+                    <p>
+                        config目录
+                        <span v-if="b" class="text-danger">存在，生成需留意之前的配置
+                            <button class="btn btn-sm btn-danger" @click="removeConfigDir"
+                                :disabled="r1Flag">删除config目录</button>
+                        </span>
+                        <span v-else>不存在</span>
+                    </p>
+                    <p>
+                        data目录
+                        <span v-if="c" class="text-danger">存在，生成需留意之前的代码
+                            <button class="btn btn-sm btn-danger" @click="removeDataDir"
+                                :disabled="r2Flag">删除data文件夹</button>
+                        </span>
+                        <span v-else>不存在</span>
+                    </p>
+                    <p>
+                        exConfig目录
+                        <span v-if="d" class="text-danger">存在，生成需留意之前的代码
+                            <button class="btn btn-sm btn-danger" @click="removeExConfigDir"
+                                :disabled="r3Flag">删除exConfig文件夹</button>
+                        </span>
+                        <span v-else>不存在</span>
+                    </p>
+                    <p v-if="d">
+                        <a class="btn btn-sm btn-warning" @click="createEx" :disabled="r4Flag">生成维度代码</a>
+                        <span class="help-block">{{msg3}}</span>
+                    </p>
+                    <p>维度代码如果生成过，并使用在项目中，不建议重复生成，直接复制会导致自己写的代码被覆盖</p>
+                </div>
+                <div class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">选择要克隆的维度文件</label>
+                        <div class="col-sm-6">
+                            <select class="form-control" v-model="swFile">
+                                <option value="-1">请选择</option>
+                                <option v-for="obj in listData" :value="obj">{{obj}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">操作</label>
+                        <div class="col-sm-6">
+                            <a class="btn btn-info" @click="getOneJson">确认</a>
+                            <span class="help-block">{{msg1}}</span>
+                        </div>
+                    </div>
+                    <div v-if="resJson!=null">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">工程名称</label>
+                            <div class="col-sm-4">
+                                <input class="form-control" v-model="project" />
+                                <span class="help-block">com.xxx</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">类名</label>
+                            <div class="col-sm-4">
+                                <input class="form-control" v-model="className" placeholder="首字母大写" />
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">模块路径</label>
+                            <div class="col-sm-4">
+                                <input class="form-control" v-model="suffix" placeholder="不填就是类名路径，建议填" />
+                                <span class="help-block">com.text.xxx.xxx.OBJ，填xxx.xxx</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">生成模式</label>
+                            <div class="col-sm-9">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="index" name="pageModel" />传统MVC
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="index" name="pageModel" value="model" />表包化路径
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="index" name="pageModel" value="XMLModel" />xml独立模式
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">restful风格接口</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="restful" name="restful" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="restful" name="restful" value="true" />是
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">生成前台接口</label>
+                            <div class="col-sm-9">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="userAPI" name="userAPI" />不生成
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="userAPI" name="userAPI" value="true" />生成
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">生成后台接口</label>
+                            <div class="col-sm-9">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="adminAPI" name="adminAPI" />不生成
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="adminAPI" name="adminAPI" value="true" />生成
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">选择继承的字段</label>
+                            <div class="col-sm-9">
+                                <div class="form-group">
+                                    <label class="col-sm-1 control-label"></label>
+                                    <label class="col-sm-3 control-label">属性名</label>
+                                    <label class="col-sm-4 control-label">继承的属性名</label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">主键</label>
+                                    <div class="col-sm-3">
+                                        <p class="form-control-static">{{swKey.type+"->"+swKey.inAttr}}</p>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" v-model="swKey.attr">
+                                    </div>
+                                </div>
+                                <div class="form-group" v-for="attr in resJson.attr">
+                                    <label class="col-sm-2 control-label"></label>
+                                    <div class="col-sm-3">
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" @click="setAttr(attr)"
+                                                checked>{{attr.type}}->{{attr.attr}}
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" v-model="swObj[attr.attr]['attr']"
+                                            :disabled="swObj[attr.attr]['display']" @input="inputText">
+                                    </div>
+                                </div>
+
+                                <div class="form-group" v-for="(attr,key) in swObj" v-if="attr.inAttr==null">
+                                    <label class="col-sm-2 control-label">类型</label>
+                                    <div class="col-sm-3">
+                                        <input class="form-control" v-model="attr.type" @input="inputText">
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <input class="form-control" v-model="attr.attr" @input="inputText">
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <a class="btn btn-sm btn-warning" @click="deleteAttr(key)">移除</a>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label"></label>
+                                    <div class="col-sm-3 control-label">
+                                        <a class="btn btn-sm btn-info" @click="addAttr">添加新新字段</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">模糊搜索</label>
+                            <div class="col-sm-6">
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="fuzzySearch" name="fuzzySearch" />否
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" v-model="fuzzySearch" name="fuzzySearch" value="true" />是
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group" v-if="fuzzySearch=='true'">
+                            <label class="col-sm-3 control-label">模糊的字段</label>
+                            <div class="col-sm-6">
+                                <label class="checkbox-inline" v-for="(attr,key) in swObj"
+                                    v-if="attr.type=='String'&&!attr.display">
+                                    <input type="checkbox" v-model="fuzzySearchList" :value="key">{{attr.attr}}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">操作</label>
+                            <div class="col-sm-6">
+                                <a class="btn btn-sm btn-success" @click="submit">生成配置文件</a>
+                                <span class="help-block">{{msg2}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="height: 200px;"></div>
+</body>
+<script>
+    var loginModel = new Vue({
+        el: "#configModel",
+        data: {
+            r1Flag: false,
+            r2Flag: false,
+            r3Flag: false,
+            r4Flag: false,
+            msg1: null,
+            msg2: null,
+            msg3: null,
+            a: false,
+            b: false,
+            c: false,
+            d: false,
+            index: "model",
+            restful: "true",
+            suffix: null,
+            className: null,
+            userAPI: "true",
+            adminAPI: "true",
+            listData: null,
+            project: "com.test",
+            resJson: null,
+            swFile: "-1",
+            swObj: {},
+            swKey: {},
+            SQLInjection: null,
+            fuzzySearch: null,
+            fuzzySearchList: [],
+            count: 0,
+
+        },
+        methods: {
+            getInfo() {
+                var self = this;
+                var url = "/javaCode/getInfo";
+                var data = {};
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        obj = res.data;
+                        self.a = obj.a;
+                        self.b = obj.b;
+                        self.c = obj.c;
+                        self.d = obj.d;
+                        self.msg1 = "获取成功"
+                    } else {
+                        self.msg1 = res.msg;
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            removeConfigDir() {
+                var self = this;
+                var url = "/javaCode/removeConfig";
+                var data = {};
+                self.r1Flag = true;
+                setTimeout(() => {
+                    self.r1Flag = false;
+                }, 2000)
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.getInfo();
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            removeExConfigDir() {
+                var self = this;
+                var url = "/javaCode/removeExConfig";
+                var data = {};
+                self.r3Flag = true;
+                setTimeout(() => {
+                    self.r3Flag = false;
+                }, 2000)
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.getInfo();
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            removeDataDir() {
+                var self = this;
+                var url = "/javaCode/removeData";
+                var data = {};
+                self.r2Flag = true;
+                setTimeout(() => {
+                    self.r2Flag = false;
+                }, 2000)
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.getInfo();
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            setProjectModel() {
+                var self = this;
+                if (this.suffix == null) {
+                    this.suffix = this.className;
+                }
+                bean_info = {
+                    path_pojo: self.project,
+                    path_service: self.project,
+                    path_service_impl: self.project,
+                    path_java_mapper: self.project,
+                    path_xml_mapper: self.project,
+                    path_controller: self.project,
+                }
+                if (this.index == "model") {
+                    bean_info.path_pojo += "." + this.suffix;
+                    bean_info.path_service += "." + this.suffix;
+                    bean_info.path_service_impl += "." + this.suffix;
+                    bean_info.path_java_mapper += "." + this.suffix;
+                    bean_info.path_xml_mapper += "." + this.suffix;
+                    bean_info.path_controller += "." + this.suffix + ".controller";
+                } else if (this.index == "XMLModel") {
+                    bean_info.path_pojo += "." + this.suffix;
+                    bean_info.path_service += "." + this.suffix;
+                    bean_info.path_service_impl += "." + this.suffix;
+                    bean_info.path_java_mapper += "." + this.suffix;
+                    bean_info.path_xml_mapper += ".mapper";
+                    bean_info.path_controller += "." + this.suffix + ".controller";
+                } else {
+                    bean_info.path_pojo += ".pojo";
+                    bean_info.path_service += ".service";
+                    bean_info.path_service_impl += ".service.impl";
+                    bean_info.path_java_mapper += ".mapper";
+                    bean_info.path_xml_mapper += ".mapper";
+                    bean_info.path_controller += ".controller";
+                }
+                bean_info.className = this.className;
+                bean_info.serviceName = this.className + "Service";
+                bean_info.controllerName = this.className + "Controller";
+                bean_info.serviceImplName = this.className + "ServiceImpl";
+                bean_info.javaMapperName = this.className + "Mapper";
+                bean_info.XMLMapperName = this.className + "Mapper";
+                bean_info.SQLInjection = this.resJson.SQLInjection;
+                if (this.restful != null) {
+                    bean_info.restful = this.restful;
+                }
+                if (this.adminAPI != null) {
+                    bean_info.adminAPI = this.adminAPI;
+                }
+                if (this.userAPI != null) {
+                    bean_info.userAPI = this.userAPI;
+                }
+                bean_info.key = this.swKey;
+                bean_info.path_util = this.resJson.path_util;
+                list = [];
+                strList = [];
+                for (attr in this.swObj) {
+                    temp = this.swObj[attr];
+                    if (!temp.display && temp.attr != null && temp.attr.length > 0 && temp.type != null && temp.type.length > 0) {
+                        list.push(temp);
+                        if (this.fuzzySearch == "true") {
+                            for (obj of this.fuzzySearchList) {
+                                if (obj == attr) {
+                                    strList.push(temp.attr);
+                                }
+                            }
+                        }
+                    }
+                }
+                bean_info.attr = list;
+                if (this.fuzzySearch == "true") {
+                    bean_info.fuzzySearch = this.fuzzySearch;
+                    bean_info.keyWordList = strList;
+                    bean_info.keyWord = "keyWord";
+                }
+                return bean_info;
+            },
+            getConfigJson() {
+                var self = this;
+                var url = "/javaCode/getConfigInfo";
+                var data = {};
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.listData = res.data;
+                    } else {
+                        self.msg1 = self.msg2 = self.msg3 = res.msg;
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            getOneJson() {
+                if (this.swFile == "-1") {
+                    return;
+                }
+                var self = this;
+                var url = "/javaCode/getOneJson";
+                var data = { "file": self.swFile };
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.resJson = res.data;
+                        self.fuzzySearchList = [];
+                        self.swObj = {};
+                        for (attr of self.resJson.attr) {
+                            self.swObj[attr.attr] = { "display": false, "attr": attr.attr, "inAttr": attr.attr, "type": attr.type, "filed": attr.filed }
+                            if (attr.type == "String") {
+                                self.fuzzySearchList.push(attr.attr);
+                            }
+                        }
+                        self.swKey = self.resJson.key;
+                        self.swKey.inAttr = self.resJson.key.attr;
+                        self.SQLInjection = self.resJson.SQLInjection;
+                        self.fuzzySearch = self.resJson.fuzzySearch;
+                    } else {
+                        self.msg1 = self.msg2 = self.msg3 = res.msg;
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            setAttr(attr) {
+                if (this.swObj[attr.attr]["display"]) {
+                    if (this.swObj[attr.attr]["type"] == "String") {
+                        this.fuzzySearchList.push(attr.attr)
+                    }
+                } else {
+                    for (i in this.fuzzySearchList) {
+                        if (this.fuzzySearchList[i] == attr.attr) {
+                            this.fuzzySearchList.splice(i, 1);
+                        }
+                    }
+                }
+                this.swObj[attr.attr]["display"] = !this.swObj[attr.attr]["display"];
+                this.$forceUpdate();
+            },
+            inputText() {
+                this.$forceUpdate();
+            },
+            addAttr() {
+                this.swObj["new" + this.count] = { "display": false, "attr": null, "inAttr": null, "type": null }
+                this.count++;
+                this.$forceUpdate();
+            },
+            deleteAttr(key) {
+                for (i in this.fuzzySearchList) {
+                    if (this.fuzzySearchList[i] == key) {
+                        this.fuzzySearchList.splice(i, 1);
+                    }
+                }
+                delete this.swObj[key];
+                this.$forceUpdate();
+            },
+            submit() {
+                obj = this.setProjectModel();
+                if (this.className == null) {
+                    this.msg2 = "类名未填写！";
+                    return;
+                }
+                if (this.project == null || this.project.length == 0) {
+                    this.msg2 = "工程名称未填写";
+                    return;
+                }
+                this.resJson.extradimensional = "true";
+                this.resJson.extradimensionalData = obj;
+                var self = this;
+                var url = "/javaCode/saveExJson";
+                var data = {
+                    "data": JSON.stringify(this.resJson),
+                    "className": this.className,
+                };
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.getInfo();
+                        self.msg2 = "创建成功~~";
+                    } else {
+                        self.msg2 = res.msg;
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            createEx() {
+                this.r4Flag = true;
+                setTimeout(() => {
+                    this.r4Flag = false;
+                }, 2000)
+                var self = this;
+                var url = "/javaCode/createEx";
+                var data = {};
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.msg3 = "创建成功~~";
+                        self.getInfo();
+                    } else {
+                        self.msg3 = res.msg;
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            }
+        },
+        mounted() {
+            this.getInfo();
+            this.getConfigJson();
+        }
+    })
+
+</script>
+
+</html>

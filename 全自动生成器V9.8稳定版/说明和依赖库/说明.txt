@@ -1,0 +1,281 @@
+1、代码生成器适用说明
+	适用于spring全家桶+mybatis的使用场景
+	已在ssm环境经过测试，spring boot环境经过测试。
+	
+	当前已完成图形化功能，不再去分代码生成器，解析器，完全生成器，但是在web页面中保留
+
+	当前版V9.5，理论上85%的全自动orm
+		暂未实现功能，大于小于的比较
+		v9无法兼容v8以下生成的代码，需要重建工程
+		9.5对部分旧查询接口做出优化
+
+	config.json说明在第5条
+
+2、文件说明
+	已废弃------数据库解析器.exe	-----------------反射数据库后生成的表配置文件，存放与config文件夹中
+	已废弃------代码生成器.exe	-----------------基于表配置文件JAVA代码，不需要反射数据库，只会扫描config中的json文件
+	已废弃------完全解析生成器.exe	-----------------上两个文件的组合
+	start.exe		运行exe启动服务器
+	html		静态资源存放目录
+	    index.html	替代了config.json图形化
+	    config.html	生成界面
+
+2.5、运行说明
+	默认端口11451
+		如果端口占用，则根据控制台信息输入新的端口
+		输入exit或关闭控制台退出
+
+
+3、生成说明
+	config文件夹	存放所有反射后的信息数据
+	data文件夹	存放生成的代码
+				自动扫描config下所有的json文件，如果不想生成，则从该文件中移除即可
+	生成的xml和接口有两个，一个是自动生成的，另一个是给用户填写自己的xml
+	生成的pojo有两个，一个是自动生成的，另一个是给用户自由补充的
+		以上均为解决后续底层设计更改，pojo类或xml因为数据库更变，实体加入自定义信息，直接复制覆盖问题。
+		POJOAuto为抽象类，不允许直接实例化
+	接口说明		Object 为表名 key为主键名
+		共有部分
+			提供增删改查前后台接口，前台普通接口，后台接口路径均存在/admin/xxx
+			add,update	如名字所示
+			deleteObjectByKey	根据主键真删！
+			selectObjectByKey	根据主键查
+			selectObject	通用查询，填入对象，根据对象所持有的值查询，支持模糊搜素，分页
+
+			控制层，业务层生成加入了前台，后台接口
+
+		service部分
+			deleteObject	条件删除，不提供自动生成的控制层接口，支持模糊字段删除
+		mapper部分
+			saveOrUpdateObjectByUnique		根据唯一索引保存或更新，能返回对象的主键
+			saveOrUpdateObjectByWhere		根据查询条件保存或更新
+				两个参数，updateObj，conditionObj
+					uobj	负责更新数据内容，必须带id
+					cObj	负责查询条件
+			insertObjectByWhereOnlySave		根据添加插入，适用于部分需要查询后插入场景
+				第一个为插入的数据，第二个为查询数据，建议看AUTOMapper中了解两个参数的逻辑
+			updateObjectByNotRepeatWhere
+				不重复则更新功能
+					两个参数，第一个为更新数据，第二个为搜索数据
+			countObject			计数函数
+		
+			对一对多，一对一版本做了更新，
+				一对一则直接查询量表的参数，		建议使用前看一下自动生成的代码
+				一对多则分别先查两个表参数，然后关联
+		
+			findObjectOneToOneObject2		一对一查询内联方式
+			countFindObjectOnetoOneObject2	对于一对一内联的计数
+			queryObjectOneToOneObject2		一对一查询，以Object为基表的左外连
+				外联无计数，直接左表单表查总数
+			findObjectOneToManyObject2		一对多查询内联方式
+			countfindObjectOneToManyObject2	对于一对多外联查询计数	
+			queryObjectOneToManyObject2	一对多查询，以Object为基表的左外连
+				外联无计数，直接左表单表查总数
+			findObjectManyToManyLinkObject2OnObjec3	多对多内联
+			queryObjectManyToManyLinkObject2OnObjec3	多对多，左外连，
+				find	开头为内联
+				query	开头为左外连
+				只有存在关联表才允许生成
+
+			
+	其他说明
+		resultMap对于多表中会存在重名的问题，如果不想完全重复，需要加入额外参数配置，multiName
+			如	user	id
+				shopping	id,user_id
+			名字替换采用表名+字段名的方式则会,user.user_id，shopping.shopping_id, shopping.user_id
+			新替换的名字和未替换的名字冲突，但是由于是关联字段，值相同，可忽略，如果有非关联字段，请留意
+		以对该项优化，resObject，为单表，只有在有对其他的映射关系后才会加入,resObjMultiTable,
+			主要因为查单表采用resOMT的模式会在json额外创建空的[]
+
+4、生成代码事项
+	util依赖工具库
+	jsonUtil.java	状态码封装，如果未导入相关依赖在Controller层请自行修改
+		在静态类中以单例阿里巴巴的fastJSON
+		JSON构成说明
+			code	业务状态码整形
+			data	业务返回的数据
+			msg	服务器告知的消息
+			page	分页数据
+		put方法提供重载
+		方法1	int index	传入状态码后自动封装简陋信息
+			已包含	-1，200，301，405，500等信息
+		方法2	int index, Object object, String msg	完整的自定义信息
+		方法3	int index, Object object		不需要msg参数的自定义信息
+		方法4	Object object			默认封装200的信息，不携带msg
+		方法5	String key, Object data		键值存储其他信息
+
+	page	分页信息库，三层均依赖，如果需要使用非提供的，请保留必要参数page,count，否则请手动修改所有xml文件依赖
+		count	分页大小
+		start	起始位置
+		page	当前页
+		maxPage	最大页数	给前端最大页数提供
+		max	最大记录数	
+		额外说明
+		后端只需要修改max数，max会自动更新最大页数。
+		page拥有默认值，即前端不提供count和page页数下，默认查10条，第一页的数据
+		page从1开始计算
+5、config.json文件说明
+	*为必填
+	*database		数据库名
+	table		非必选参数，不填则生成全表，填入后只生成单表，
+			可以填入字符串，如果是字符串则只会生成一个表的配置文件
+			可以跳入列表，则根据列表中的表生成配置文件
+	host		非必选参数，数据库地址	默认值127.0.0.1
+	name		非必选参数，数据库用户名	默认值root
+	password		非必选参数，数据库密码	默认值123456
+	port		非必选参数，数据库端口	默认值3306
+	*project		工程名称	如com.test
+	underscoreReplace	非必选参数，将下划线替换成驼峰，只有填入字符串的true才生效
+	restful		非必选参数，是否采用restful风格，只有填入字符串的true才生效
+				未采用下，生成的方法将支持任何请求方式，接口均以addXXX,deleteXXX等方式起名
+				现生成接口有
+				addObject		添加
+				deleteObject	删除
+				updateObject	修改
+				getObjectByKey	按照主键查	key会被替换成该表的主键名
+				getObject		查询多个，根据传入的对象的值，可以进行筛选查询，支持分页
+	fuzzySearch	非必选参数，是否进行模糊搜哦，只有传入字符串的true才生效
+				该项启用后，如果表字段存在字符串，则自动生成关键字，如果不存在则不启用。
+				生成后，会自动添加关键字参数，并在模糊搜索中以 AND (filed1 like keyword or filed2 like keyword....)的形式，酌情考虑使用
+	fuzzySearchList	非必选参数，指定模糊查询的表，只有启用模糊查询才会生效，列表形式，可在列表表中嵌套kv形式的列表，k为表名，v为指定查询的参数
+				如列表中是kv形式，无比加上大括号使之成为对象，填入的字段为表中该字段名字
+				[{"table1":["filed1","filed2"]},"table2","table3"]
+				
+	resMap		非必选参数，使用在XML文件中采用resultMap替换resultType，只有填入字符串的true才生效，失效下依然会生成，但不替换
+	pageModel	非必选参数，选择生成文件模式，有5种
+				不填，def，传统MVC三层模式
+				model，模块化模式，一个表对应一个模块包
+				superModel，超级模块化模式，如果表具有task,task_map,task_data,则生成,com.xxx.task,com.xxx.task.map.com.xxx.task.data
+				XMLModel,xml独立为一个模块，com.xxx.mapper，其余采用model模式
+				superXMLModel,在XMLModel的基础上，加入super模式
+	tablePrefix	非必选参数，去除表的统一前缀前缀，进行生成实体类
+				例如，test_A,test_B，填入test后，将去掉，保留_A,_B作为实体类名，所以替换不要忘记加入下划线，未加入会对生成类名收到一定影响。
+	attrPrefix		非必选参数，去除表的字段的前缀，进行实体生成，只有填入字符串的true才生效
+				例如	product_id,product_user_id，将会自动去除,product_，只以id,userId作为属性生成实体类
+	util		非必选参数，工具库默认名称util，如果填入，则会自动去除首尾的【.】，并和默认工程名称拼接
+	multiTable	非必选参数，开启多表自动映射，只有填入字符串的true才生效
+	multiName	非必选参数，完全解决字段名重复问题，只有填入字符串的true才生效
+	oneToOne	非必选参数，指定一对一相关配置，以列表方式填入
+				实例："oneToOne": ["user.user_id->user_info.user_info_user_id","product.id->shopping_crad.product_id"]
+	oneToMany	非必选参数，指定一对多相关配置，参考如上
+	createFile		非必选参数，指定生成那些文件，列表格式
+				controller
+				service
+				serviceImpl
+				JAVAMapper		空白的文件
+				XMLMapper		空白的文件
+				POJOAuto			自动生成的POJO
+				POJO			空白POJO
+				JAVAAutoMapper		自动生成的
+				XMLAutoMapper		自动生成的
+				不填全部生成，填入后只生成对应文件
+	notCreateFile	非必选参数，不生成的文件，列表格式，参数如上
+	falseDelete	非必选参数，假删标记，自动匹配默认的关键字标记，生成用update的假删，只有填入字符串的true才生效
+	falseDeleteFlag	非必选参数，以该字段结尾的，则确定为假删标记，默认为delete_flag，根据是否取消下划线规则，变成dleteFlag，只有启用假删标记才生效
+	
+	备注：
+		如果表中没有主键，程序无法正常生成。
+		自动扫描表关系，是基于B表持有A表的表名+主键名，
+			如：B：shopping_crad.product_key，A：product.key，则会自动构成映射关系
+		
+6，解析器生成的table_name.json说明
+	生成的配置文件允许自定义修改
+	className	类名
+	tableName	表名
+	attr		拥有的常规字段，列表形式，内嵌子对象
+		attr	属性名
+		filed	字段名
+		type	JAVA数据类型
+	key		主键字段
+		attr	属性名
+		filed	字段名
+		type	JAVA数据类型
+	path_pojo		生成的POJO文件所在模块
+	path_service	生成的service文件所在模块
+	path_service_impl	生成的serviceImpl文件所在模块
+	path_java_mapper	生成的javaMapper文件所在模块
+	path_xml_mapper	生成的XMLMapper文件所在模块
+	path_controller	生成的Controller文件所在模块
+	path_util		util文件所在模块
+	serviceName	默认生成的业务层接口名称
+	serviceImplName	默认生成的业务实现类名称
+	javaMapperName	默认生成的JAVAMappe接口r名称
+	XMLMapperName	默认生成的XMLMapper名称
+	javaAutoMapperName	默认自动生成的接口名称
+	XMLAutoMapperName	默认自动生成XMLMapper名称
+	controllerName	默认生成的controller名称
+	fuzzySearch	该表是否模糊搜索
+	keyWord		模糊搜素关键字名称
+	keyWordList	模糊搜索的字段名称，列表形式，里面填入字段名
+	restful		是否采用restful风格
+	resultMap		是否开启resultMap替换
+	resultMapName	默认生成的resultMap名称
+	oneToOne	一对一配置，列表形式，存放的对象参考本身
+				额外字段
+				foreign_key	外键的字段名称，一对一中，主表持有其他表的主键，该字段至主表中的
+	oneToMany	一对多配置，列表形式，存放的对象参考本身
+				额外字段
+				foreign_key	外键的字段名称，一对多中，其他表持有该表的主键，该字段至其他表中的
+	manyToMany	对多配置，列表形式
+		{
+			to	中间表对象
+			many	另一多的一方对象
+		}
+	createFile		指定生成那些文件，列表格式
+				controller
+				service
+				serviceImpl
+				JAVAMapper		空白的文件
+				XMLMapper		空白的文件
+				POJOAuto			自动生成的POJO
+				POJO			空白POJO
+				JAVAAutoMapper		自动生成的
+				XMLAutoMapper		自动生成的
+				不填全部生成，填入后只生成对应文件
+	notCreateFile
+
+7、文件结构说明
+[---root---]
+        |---------- 数据库解析器.exe	已废弃-----------------反射数据库后生成的表配置文件，存放与config文件夹中
+        |---------- 代码生成器.exe		已废弃-----------------基于表配置文件JAVA代码，不需要反射数据库，只会扫描config中的json文件
+        |---------- 完全解析生成器.exe	已废弃-----------------上两个文件的组合
+        |---------- config.exe		已废弃，图形化后自动生成-----------------依赖配置文件，数据库解析器会报错。
+        |-----------start.ext		服务器启动
+        |----[config]------		-----------------生成的配置文件，只有解析后才创建
+        |           |---------table1.json
+        |           |---------table2.json
+        |           |---------table3.json
+        |           |---------.......json
+        |----[data]--------		-----------------生成的代码路径，生成后才创建
+        |           |----[src]--------		-----------------源文件
+        |                    |----[com]-----
+        |                               |----[xxx]-----
+        |
+        |----[html]-------	服务器静态资源路径
+        |          |-------[static]--------	依赖js等各种文件
+        |          |-------[index.html]		主页
+        |          |-------[config.html]	生成页面
+        |
+        |----[说明和依赖库]--------		-----------------说明和uitl
+        |           |----[util]--------
+        |           |         |----[JsonUtil.java]-----	-----------------json工具包
+        |           |         |----[Page.java]--------	-----------------分页工具包
+        |           |----[说明.txt]--------	-----------------本文件
+        |----[源码]--------		-----------------源码
+        |           |----[JAVA后端生成器Vx]--------
+        |                    |----[src]-----		-----------------核心代码
+        |                    |         |----[httpServer]----		 ----------------与服务器相关
+        |                    |         |----[analysis]-----		-----------------解析器相关
+        |                    |         |----[controller]-----		-----------------controller层相关
+        |                    |         |----[generate]-----		-----------------生成器相关
+        |                    |         |----[mapper]-----		-----------------mapper相关
+        |                    |         |----[pojo]-----			-----------------POJO相关
+        |                    |         |----[service]-----		-----------------service相关
+        |                    |         |----[servlet]-----			-----------------业务逻辑相关相关
+        |                    |         |----[util]-----			-----------------util相关
+        |                    |----[config.json]--------	-----------------测试的config
+        |                    |----[test.py]---------		-----------------完全解析入口
+        |                    |----[test1.py]--------		-----------------数据库解析器入口
+        |                    |----[test2.py]--------		-----------------生成器入口
+
+

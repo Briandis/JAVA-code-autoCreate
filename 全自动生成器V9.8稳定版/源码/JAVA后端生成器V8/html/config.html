@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh" style="height: 100%;">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>基础信息填写</title>
+    <link rel="stylesheet" href="/static/bootstrap.v3.3.7/css/bootstrap.min.css">
+    <script src="/static/jquery/jquery.v3.5.1.js"></script>
+    <script src="/static/bootstrap.v3.3.7/js/bootstrap.min.js"></script>
+    <script src="/static/vue/vue.2.6.12.js"></script>
+
+</head>
+
+<body style="height: 100%;">
+
+    <div class="container">
+        <div class="row">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="jumbotron text-center">
+                        <h1>
+                            JAVA后端代码生成器
+                        </h1>
+                        <p class="text-danger">
+                            生成中心
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12" id="configModel">
+                <div class="well">
+                    <p>
+                        config.json<span v-if="a">存在</span><span v-else class="text-danger">不存在</span>
+                    </p>
+                    <p>
+                        config目录
+                        <span v-if="b" class="text-danger">存在，生成需留意之前的配置
+                            <button class="btn btn-sm btn-danger" @click="removeConfigDir"
+                                :disabled="r1Flag">删除config目录</button>
+                        </span>
+                        <span v-else>不存在</span>
+                    </p>
+                    <p>
+                        data目录
+                        <span v-if="c" class="text-danger">存在，生成需留意之前的代码
+                            <button class="btn btn-sm btn-danger" @click="removeDataDir"
+                                :disabled="r2Flag">删除data文件夹</button>
+                        </span>
+                        <span v-else>不存在</span>
+                    </p>
+                    <p>
+                        ps:生成的config目录的Object.json可以进一步配置生成内容
+                    </p>
+                </div>
+                <div class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">一键生成代码~~</label>
+                        <div class="col-sm-6">
+                            <a class="btn btn-info" @click="c1" :disabled="c1Flag">生成</a>
+                            <span class="help-block">{{msg1}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">根据config解析数据库</label>
+                        <div class="col-sm-6">
+                            <a class="btn btn-info" @click="c2" :disabled="c2Flag">生成</a>
+                            <span class="help-block">{{msg2}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">根据解析后数据生成代码~</label>
+                        <div class="col-sm-6">
+                            <a class="btn btn-info" @click="c3" :disabled="c3Flag">生成</a>
+                            <span class="help-block">{{msg3}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="height: 200px;"></div>
+</body>
+<script>
+    var loginModel = new Vue({
+        el: "#configModel",
+        data: {
+            c1Flag: false,
+            c2Flag: false,
+            c3Flag: false,
+            r1Flag: false,
+            r2Flag: false,
+            msg1: null,
+            msg2: null,
+            msg3: null,
+            a: false,
+            b: false,
+            c: false,
+        },
+        methods: {
+            c1() {
+                var self = this;
+                var url = "/javaCode/create1";
+                var data = {};
+                self.c1Flag = true;
+                setTimeout(() => {
+                    self.c1Flag = false;
+                }, 2000)
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.msg1 = "生成完成去根目录找data吧"
+                        self.getInfo();
+                    } else {
+                        self.msg1 = res.msg;
+                    }
+                }).fail(function (res) {
+                    self.msg1 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            c2() {
+                var self = this;
+                var url = "/javaCode/create2";
+                var data = {};
+                self.c2Flag = true;
+                setTimeout(() => {
+                    self.c2Flag = false;
+                }, 2000)
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.msg2 = "生成完成去根目录找config目录吧"
+                        self.getInfo();
+                    } else {
+                        self.msg2 = res.msg;
+                    }
+                }).fail(function (res) {
+                    self.msg1 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            c3() {
+                var self = this;
+                var url = "/javaCode/create3";
+                var data = {};
+                self.c3Flag = true;
+                setTimeout(() => {
+                    self.c3Flag = false;
+                }, 2000)
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.msg3 = "生成完成去根目录找data吧"
+                        self.getInfo();
+                    } else {
+                        self.msg3 = res.msg;
+                    }
+                }).fail(function (res) {
+                    self.msg1 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            getInfo() {
+                var self = this;
+                var url = "/javaCode/getInfo";
+                var data = {};
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        obj = res.data;
+                        self.a = obj.a;
+                        self.b = obj.b;
+                        self.c = obj.c;
+                    } else {
+                        self.msg1 = self.msg2 = self.msg3 = res.msg;
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            removeConfigDir() {
+                var self = this;
+                var url = "/javaCode/removeConfig";
+                var data = {};
+                self.r1Flag = true;
+                setTimeout(() => {
+                    self.r1Flag = false;
+                }, 2000)
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.getInfo();
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            },
+            removeDataDir() {
+                var self = this;
+                var url = "/javaCode/removeData";
+                var data = {};
+                self.r2Flag = true;
+                setTimeout(() => {
+                    self.r2Flag = false;
+                }, 2000)
+                $.post(url, data, function (res) {
+                    res = eval("(" + res + ")");
+                    if (res.code == "200") {
+                        self.getInfo();
+                    }
+                }).fail(function (res) {
+                    self.msg1 = self.msg2 = self.msg3 = "请求失败，错误代码：" + res.status;
+                })
+            }
+        },
+        mounted() {
+            this.getInfo();
+        }
+    })
+
+</script>
+
+</html>
